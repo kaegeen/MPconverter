@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP4 to MP3 Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ffmpeg.js/0.10.4/ffmpeg.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 p-4 text-center">
+        <h1 class="text-white text-2xl font-bold">MP4 to MP3 Converter</h1>
+    </nav>
+
+    <!-- File Upload Section -->
+    <section class="py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold mb-8">Upload MP4 to Convert</h2>
+            <div class="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-8">
+                <input type="file" id="videoInput" accept="video/mp4" class="w-full p-3 border rounded-lg mb-4">
+                <button onclick="convertToMp3()" class="w-full px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">
+                    Convert to MP3
+                </button>
+                <a id="downloadLink" class="hidden mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700" download="output.mp3">Download MP3</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        async function convertToMp3() {
+            const input = document.getElementById('videoInput').files[0];
+            if (!input) {
+                alert('Please select an MP4 file to convert.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const ffmpeg = await FFmpeg.createFFmpeg({ log: true });
+                await ffmpeg.load();
+                
+                const inputName = 'input.mp4';
+                const outputName = 'output.mp3';
+                ffmpeg.FS('writeFile', inputName, new Uint8Array(event.target.result));
+                
+                await ffmpeg.run('-i', inputName, outputName);
+                const mp3Data = ffmpeg.FS('readFile', outputName);
+                
+                const mp3Blob = new Blob([mp3Data.buffer], { type: 'audio/mpeg' });
+                const url = URL.createObjectURL(mp3Blob);
+                
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = url;
+                downloadLink.classList.remove('hidden');
+            };
+            
+            reader.readAsArrayBuffer(input);
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-white text-center py-4">
+        <p>&copy; 2025 MP4 to MP3 Converter. All rights reserved.</p>
+    </footer>
+</body>
+</html>
